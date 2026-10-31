@@ -14,7 +14,8 @@ Ver [`docs/EJECUCION_ANDROID.md`](docs/EJECUCION_ANDROID.md). Resumen: abre `not
 bash tools/install_blender.sh          # Blender 4.2 LTS en /opt/blender
 pip install -r requirements.txt
 python run.py --mode test              # prototipo de 8 s (CPU: ~35 min)
-python run.py --mode animatic          # corto completo, render Workbench rápido
+python run.py --mode animatic2d        # corto completo sin 3D (fondo provisional): valida estímulo, rótulos y audio en ~10 min
+python run.py --mode animatic          # corto completo con Workbench (rápido con GPU; en CPU sin GPU tarda lo mismo que Cycles)
 python run.py --mode final_cpu         # corto completo, Cycles CPU 540×960 → 1080×1920 (CPU 4 núcleos: ~4 h)
 python run.py --mode final --device OPTIX     # GPU NVIDIA: Cycles 720×1280, 32 spp, motion blur
 python run.py --mode final_hd --device OPTIX  # GPU NVIDIA: 1080×1920 nativo, 64 spp

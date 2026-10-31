@@ -59,3 +59,14 @@ Segunda pasada: todos los planos legibles, salvo el final, que se corrigió de n
 6. Sesgo del estimador de velocidad (mediana de |Δθ| sobre posiciones cuantizadas: +8–12 %): reemplazado por una regresión lineal por tramo.
 
 Nota: tras los cambios 3–6, el MP4 de prueba se recompuso y se volvió a verificar (`--skip-render`) sobre los frames 3D ya renderizados. Su iluminación 3D del gancho corresponde aún a la posición antigua del estímulo. El render completo usa la configuración nueva.
+
+## 6. Animática
+- **Workbench (3D):** se lanzó y se **detuvo**. Con OpenGL por software iba a ~9 s/frame, igual que Cycles, así que no ahorraba tiempo en este entorno.
+- **Animática 2D (`--mode animatic2d`): EJECUTADA.** Duración completa de 54,5 s, con fondo provisional rotulado con plano y tiempo, estímulo exacto, rótulos, mezcla final y control. Medido en el MP4 decodificado:
+  - especificaciones correctas (1080×1920, 60 fps, H.264 High, AAC 48 kHz estéreo, 54,5 s);
+  - beeps 24/24 detectados, error máximo de 0,46 ms; control con 0 beeps;
+  - **6 ensayos** (hook, T1a, T1b, T2a, T2b, revelación): 0 frames de error en todas las inversiones, sin inversiones espurias, velocidad medida de 0,2476 a 0,2523 rps (objetivo 0,25), error de posición ≤ 1,74 px, beep − inversión visual entre −0,02 y +0,02 ms, revelación sin beeps;
+  - flashes: 0; sonoridad: −17,5 LUFS, pico real −1,1 dBFS.
+
+## 7. Render final en CPU (`--mode final_cpu`)
+Lanzado a las 06:08 (hora del contenedor). 1635 frames 3D a 540×960, 10 spp + OIDN, compuestos a 1080×1920 y 60 fps.
