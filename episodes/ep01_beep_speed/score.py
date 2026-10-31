@@ -15,6 +15,17 @@ import numpy as np
 from pudulab import audio as A
 
 D_DORIAN = [62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81]
+STIM_NOTES = {57, 69}  # A3/A4: fundamental or 2nd harmonic at 440 Hz
+
+
+def safe(m):
+    """The paradigm's 440 Hz beep must be the only 440 Hz event of the
+    episode: notes whose fundamental or octave lands on A4 move up a tone."""
+    return m + 2 if m in STIM_NOTES else m
+
+
+def pluck(m, *a, **k):
+    return A.pluck(A.midi_hz(safe(m)), *a, **k)
 
 
 def trial_windows(plan, pad=0.25):
@@ -42,7 +53,7 @@ def music(plan):
     rng = np.random.default_rng(4)
     # Hook: low mysterious drone only (no rhythmic notes competing with beeps).
     T.add(A.pad(A.midi_hz(38), 3.2), 0.0, gain=0.10)
-    T.add(A.pad(A.midi_hz(45), 3.2), 0.0, gain=0.06)
+    T.add(A.pad(A.midi_hz(41), 3.2), 0.0, gain=0.06)
     # Chase 3-12 s: playful kalimba ostinato at 120 bpm in D dorian.
     beat = 0.5
     motif = [0, 2, 4, 2, 5, 4, 2, 1, 0, 2, 4, 6, 5, 4, 2, 4]
@@ -50,9 +61,9 @@ def music(plan):
     i = 0
     while t < 11.8:
         deg = motif[i % len(motif)]
-        T.add(A.pluck(A.midi_hz(D_DORIAN[deg]), 0.8), t, gain=0.16, pan=-0.3 + 0.6 * (i % 2))
+        T.add(pluck(D_DORIAN[deg], 0.8), t, gain=0.16, pan=-0.3 + 0.6 * (i % 2))
         if i % 2 == 0:
-            T.add(A.pluck(A.midi_hz(D_DORIAN[deg] + 12), 0.5, bright=0.6), t + 0.25, gain=0.05, pan=0.4)
+            T.add(pluck(D_DORIAN[deg] + 12, 0.5, bright=0.6), t + 0.25, gain=0.05, pan=0.4)
         if i % 4 == 0:
             T.add(A.bass(A.midi_hz(38 + (0 if (i // 8) % 2 == 0 else 5)), 1.8), t, gain=0.22)
         t += beat / 2 if 5.5 < t < 11 else beat
@@ -63,26 +74,26 @@ def music(plan):
     # Arrival 12-14.5: suspended chord, fades before the first trial.
     for m in (50, 55, 57, 62):
         T.add(A.pad(A.midi_hz(m), 1.9), 12.0, gain=0.04)
-    T.add(A.pluck(A.midi_hz(74), 1.5), 12.6, gain=0.12)
-    T.add(A.pluck(A.midi_hz(81), 1.5), 12.75, gain=0.08)
+    T.add(pluck(74, 1.5), 12.6, gain=0.12)
+    T.add(pluck(81, 1.5), 12.75, gain=0.08)
     # Question motif after T1a (18.2): rising two notes.
     for k, m in enumerate((69, 74, 76)):
-        T.add(A.pluck(A.midi_hz(m), 0.9), 18.3 + 0.28 * k, gain=0.13)
-    T.add(A.pluck(A.midi_hz(81), 1.2), 19.6, gain=0.12)  # the pudu decides
+        T.add(pluck(m, 0.9), 18.3 + 0.28 * k, gain=0.13)
+    T.add(pluck(81, 1.2), 19.6, gain=0.12)  # the pudu decides
     # Happy hop 24.8-29.8: bouncy major-ish arpeggio.
     t = 24.8
     for k in range(16):
         m = [62, 66, 69, 74, 69, 66, 64, 67][k % 8]
-        T.add(A.pluck(A.midi_hz(m + 12), 0.6), t, gain=0.12, pan=0.25 * math.sin(k))
+        T.add(pluck(m + 12, 0.6), t, gain=0.12, pan=0.25 * math.sin(k))
         t += 0.3
     T.add(A.pad(A.midi_hz(50), 4.6), 24.8, gain=0.05)
     T.add(A.pad(A.midi_hz(54), 4.6), 24.8, gain=0.04)
     # Prueba 2 card 30-31.5: short call.
-    T.add(A.pluck(A.midi_hz(69), 0.9), 30.1, gain=0.12)
-    T.add(A.pluck(A.midi_hz(70), 0.9), 30.45, gain=0.12)
+    T.add(pluck(69, 0.9), 30.1, gain=0.12)
+    T.add(pluck(70, 0.9), 30.45, gain=0.12)
     # Confusion 35.1-37.9: descending chromatic + tilt.
     for k, m in enumerate((76, 75, 74, 73, 72)):
-        T.add(A.pluck(A.midi_hz(m), 0.7), 35.25 + 0.45 * k, gain=0.11, pan=(-1) ** k * 0.5)
+        T.add(pluck(m, 0.7), 35.25 + 0.45 * k, gain=0.11, pan=(-1) ** k * 0.5)
     # Dizzy wobble 41.1-42.
     T.add(A.glide(600, 380, 0.9, amp=0.05) * (1 + 0.5 * np.sin(np.linspace(0, 40, int(0.9 * A.SR)))), 41.1)
     # Reveal sting 41.1 + drone during silent replay (no rhythm, no beeps).
@@ -91,16 +102,16 @@ def music(plan):
     # Comedy: slide whistle on the fall + resolution.
     T.add(A.glide(1400, 300, 0.9, amp=0.07), 46.7)
     for m in (62, 65, 69, 72):
-        T.add(A.pluck(A.midi_hz(m), 1.6), 48.4 + 0.12 * (m - 62) / 3, gain=0.1)
+        T.add(pluck(m, 1.6), 48.4 + 0.12 * (m - 62) / 3, gain=0.1)
     # Outro 50-54.5: theme restated, ending on an open question chord.
     t = 50.2
     for deg in (0, 2, 4, 6, 5, 4, 2, 4):
-        T.add(A.pluck(A.midi_hz(D_DORIAN[deg]), 0.9), t, gain=0.14)
+        T.add(pluck(D_DORIAN[deg], 0.9), t, gain=0.14)
         t += 0.3
     for m in (50, 57, 62, 64, 67):
         T.add(A.pad(A.midi_hz(m), 2.6), 51.6, gain=0.035)
-    T.add(A.pluck(A.midi_hz(76), 2.0), 52.8, gain=0.12)
-    T.add(A.pluck(A.midi_hz(79), 2.0), 53.1, gain=0.1)
+    T.add(pluck(76, 2.0), 52.8, gain=0.12)
+    T.add(pluck(79, 2.0), 53.1, gain=0.1)
     x = A.reverb(T.buf, 2.4, wet=0.3)
     # Hard silence in trial windows (except hook, which only has a drone).
     g = np.ones(T.n)

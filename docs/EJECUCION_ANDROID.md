@@ -4,8 +4,8 @@
 
 1. **Token de GitHub** (necesario porque el repositorio es privado). Hazlo una sola vez:
    - En Chrome, entra en github.com → foto de perfil → *Settings* → *Developer settings* → *Personal access tokens* → *Fine-grained tokens* → *Generate new token*.
-   - En *Repository access*, elige sólo `manius-x/videosai`; en *Contents*, permiso *Read-only*. Copia el token.
-2. Abre https://colab.research.google.com → *GitHub* (o *Archivo → Abrir cuaderno → GitHub*). Inicia sesión y elige `manius-x/videosai`, rama `claude/pudu-perceptual-shorts-x7bxef`, archivo `notebooks/pudu_shorts_colab.ipynb`.
+   - En *Repository access*, elige sólo `ManIUs-X/VideosAI`; en *Contents*, permiso *Read-only*. Copia el token.
+2. Abre https://colab.research.google.com → *GitHub* (o *Archivo → Abrir cuaderno → GitHub*). Inicia sesión y elige `ManIUs-X/VideosAI`, rama `claude/pudu-perceptual-shorts-x7bxef`, archivo `notebooks/pudu_shorts_colab.ipynb`.
    - Si Colab no muestra repositorios privados, descarga el `.ipynb` desde GitHub en el teléfono y súbelo con *Archivo → Subir cuaderno*.
 3. En Colab: ícono de llave 🔑 (*Secretos*) → *Agregar* → nombre `GITHUB_TOKEN`, pega el token y activa *Acceso del cuaderno*.
 4. *Entorno de ejecución → Cambiar tipo de entorno de ejecución → T4 GPU*. Si no hay GPU disponible, sigue en CPU (más lento).
@@ -27,8 +27,8 @@
 2. *Connect* → *Start Web Terminal* (funciona en el navegador del teléfono).
 3. En la terminal:
    ```bash
-   git clone -b claude/pudu-perceptual-shorts-x7bxef https://<TOKEN>@github.com/manius-x/videosai.git
-   cd videosai && bash tools/install_blender.sh && pip install -r requirements.txt
+   git clone -b claude/pudu-perceptual-shorts-x7bxef https://<TOKEN>@github.com/ManIUs-X/VideosAI.git
+   cd VideosAI && bash tools/install_blender.sh && pip install -r requirements.txt
    python run.py --mode test --device OPTIX
    python run.py --mode final_hd --device OPTIX
    ```

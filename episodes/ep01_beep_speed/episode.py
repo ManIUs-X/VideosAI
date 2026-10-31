@@ -25,7 +25,7 @@ DURATION = 54.5
 # --------------------------------------------------------------------------
 TRIALS = [
     # name, start, av_side, seed, center_y, role
-    ("hook", 0.0, "left", 11, 0.215, "hook"),
+    ("hook", 0.0, "left", 11, 0.25, "hook"),
     ("T1a", 15.0, "left", 21, 0.06, "test"),
     ("T1b", 21.5, "left", 22, 0.06, "test"),
     ("T2a", 32.0, "right", 31, 0.06, "test"),
@@ -147,7 +147,7 @@ def captions():
     def cap(start, end, text, y=0.14, size=0.042, style="title"):
         C.append({"start": start, "end": end, "text": text, "y": y, "size": size, "style": style})
 
-    cap(0.0, 3.0, "¿Cuál luz va más rápido?", y=0.12, size=0.05)
+    cap(0.0, 3.0, "¿Cuál luz va más rápido?", y=0.07, size=0.044)
     cap(0.0, 3.0, "Activa el sonido", y=0.73, size=0.03, style="small")
     cap(3.3, 7.4, "Bosque valdiviano, sur de Chile", y=0.13, size=0.04)
     cap(7.6, 11.8, "Una luz que cambia de velocidad…\n¿o no?", y=0.13, size=0.042)
@@ -166,7 +166,7 @@ def captions():
     cap(50.3, DURATION, "¿Cuál te pareció más rápida\nen la Prueba 1?\nComenta: IZQ o DER", y=0.12, size=0.042)
     cap(50.3, DURATION, "Ilusión beep-speed · Merz et al. (2026)\nAtten Percept Psychophys · doi:10.3758/s13414-025-03211-6",
         y=0.75, size=0.019, style="small")
-    cap(0.0, DURATION, "NEXO NEUROLAB", y=0.045, size=0.018, style="brand")
+    cap(0.0, DURATION, "NEXO NEUROLAB", y=0.035, size=0.016, style="brand")
     return C
 
 

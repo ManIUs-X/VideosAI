@@ -60,34 +60,57 @@ def track_trial(plan, tr, path, scale=2):
     W, H = plan["resolution"]
     fps = plan["fps"]
     sp = tr["spec"]
-    # decode with a 0.5 frame margin so frame k of the stream lands at index k
-    frames = decode_gray(path, tr["start"] - plan["range"][0] + 0.5 / fps, tr["frames"] / fps, W, H, scale)
+    # ffmpeg -ss keeps frames with pts >= T: start half a frame early so the
+    # first decoded frame is exactly the trial's first frame
+    ts = tr["start"] - plan["range"][0]
+    frames = decode_gray(path, max(0.0, ts - 0.5 / fps), tr["frames"] / fps, W, H, scale)
     n = min(len(frames), tr["frames"])
     res = {}
+    # Matched filter for a disc of the light's core size (difference of
+    # gaussians): thin bright strokes such as caption text respond weakly.
+    from scipy import ndimage
+
+    core = plan["light_style"]["core_radius"] * H / scale
+    dog = np.stack([ndimage.gaussian_filter(fr, core * 0.7) - ndimage.gaussian_filter(fr, core * 2.5)
+                    for fr in frames[:n]])
+    yy, xx = np.mgrid[0:frames.shape[1], 0:frames.shape[2]]
+    win = max(6, int(round(core * 1.6)))
     for side, sx in (("left", -1), ("right", 1)):
         cx = (0.5 + sx * sp["center_offset_x"] * H / W) * W / scale
         cy = (0.5 - sp["center_y"]) * H / scale
-        r = sp["radius"] * H / scale
-        yy, xx = np.mgrid[0:frames.shape[1], 0:frames.shape[2]]
-        ring = np.abs(np.hypot(xx - cx, yy - cy) - r) < r * 0.45
-        angs = []
+        planned = np.array(tr["xy"][side])
+        angs, perr = [], []
         for k in range(n):
-            fr = frames[k] * ring
-            thr = fr.max() * 0.92
-            m = fr >= thr
-            px, py = (xx[m] * fr[m]).sum() / fr[m].sum(), (yy[m] * fr[m]).sum() / fr[m].sum()
+            # search a small window around the planned position: measures
+            # whether the encoded light is where the paradigm says it must be
+            ex = (0.5 + planned[k][0] * H / W) * W / scale
+            ey = (0.5 - planned[k][1]) * H / scale
+            y0, y1 = max(0, int(ey) - win), int(ey) + win + 1
+            x0, x1 = max(0, int(ex) - win), int(ex) + win + 1
+            patch = dog[k][y0:y1, x0:x1]
+            wgt = np.clip(patch - 0.5 * patch.max(), 0, None)
+            px = (xx[y0:y1, x0:x1] * wgt).sum() / wgt.sum()
+            py = (yy[y0:y1, x0:x1] * wgt).sum() / wgt.sum()
+            perr.append(np.hypot(px - ex, py - ey) * scale)
             angs.append(np.arctan2(-(py - cy), px - cx))
         a = np.unwrap(np.array(angs))
         d = np.diff(a)
         sgn = np.sign(signal.medfilt(d, 5))
         flips = np.where(sgn[1:] * sgn[:-1] < 0)[0] + 1
-        # Speed: robust median of |d| away from reversals
-        mask = np.ones(len(d), bool)
-        for fl in flips:
-            mask[max(0, fl - 3):fl + 3] = False
-        speed = float(np.median(np.abs(d[mask])) * fps / (2 * np.pi))
+        # Speed: least-squares slope of angle vs. time on each segment between
+        # reversals (unbiased by per-frame centroid jitter), duration-weighted.
+        edges = [0, *flips.tolist(), len(a) - 1]
+        slopes, weights = [], []
+        for e0, e1 in zip(edges, edges[1:]):
+            i0, i1 = e0 + 2, e1 - 2
+            if i1 - i0 >= 8:
+                k = np.arange(i0, i1 + 1)
+                slopes.append(abs(np.polyfit(k / fps, a[i0:i1 + 1], 1)[0]))
+                weights.append(i1 - i0)
+        speed = float(np.average(slopes, weights=weights) / (2 * np.pi))
         res[side] = {"measured_reversal_frames": flips.tolist(), "expected": tr["reversal_frames"][side],
-                     "speed_rps": speed}
+                     "speed_rps": speed, "max_position_error_px": float(np.max(perr)),
+                     "mean_position_error_px": float(np.mean(perr))}
     return res
 
 
@@ -147,6 +170,7 @@ def run(plan, mp4, events, control_mp4=None):
     rep["audio"] = {"expected_beeps": len(exp), "detected_beeps": int(len(meas)),
                     "onset_error_ms": [round(1000 * e, 2) for e in errs if e is not None]}
     rep["audio"]["max_abs_error_ms"] = max((abs(e) for e in rep["audio"]["onset_error_ms"]), default=None)
+    rep["audio"]["detected_times_s"] = [round(float(m), 4) for m in meas]
     rep["audio_ok"] = (len(meas) == len(exp) and rep["audio"]["max_abs_error_ms"] is not None
                        and rep["audio"]["max_abs_error_ms"] < 5.0)
     if control_mp4:
@@ -168,8 +192,12 @@ def run(plan, mp4, events, control_mp4=None):
             got = mm["measured_reversal_frames"]
             ferr = [min((abs(g - x) for g in got), default=99) for x in e]
             entry[side] = {"speed_rps": round(mm["speed_rps"], 4), "reversal_frame_errors": ferr,
-                           "extra_reversals": max(0, len(got) - len(e))}
-            ok &= max(ferr) <= 1 and abs(mm["speed_rps"] - tr["spec"]["av_speed_rps"]) < 0.01
+                           "extra_reversals": max(0, len(got) - len(e)),
+                           "max_position_error_px": round(mm["max_position_error_px"], 2)}
+            want = tr["spec"]["av_speed_rps"] * (1.0 if side == tr["spec"]["av_side"] else tr["spec"]["v_ratio"])
+            entry[side]["expected_speed_rps"] = want
+            ok &= (max(ferr) <= 1 and entry[side]["extra_reversals"] == 0 and abs(mm["speed_rps"] - want) < 0.01
+                   and mm["max_position_error_px"] < 4.0)
         if tr["spec"]["beeps"]:
             av = tr["spec"]["av_side"]
             lags = []

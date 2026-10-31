@@ -35,7 +35,7 @@ class GlowSprite:
         self.core = style["core_radius"] * H
         self.sigma = style["halo_sigma"] * H
         self.color = np.array(style["color"], np.float32)
-        self.R = int(self.sigma * 4 + self.core + 2)
+        self.R = int(self.sigma * 2.2 * 4.5 + self.core + 2)  # covers the wide halo tail
 
     def draw(self, img, cx, cy, intensity):
         if intensity <= 0:
@@ -67,12 +67,16 @@ class Captions:
     def _render(self, c):
         px = int(c["size"] * self.H)
         style = c["style"]
-        f = font(px, 800 if style != "small" else 600)
         lines = c["text"].split("\n")
-        spacing = int(px * 0.12)
         tmp = ImageDraw.Draw(Image.new("L", (1, 1)))
-        boxes = [tmp.textbbox((0, 0), ln, font=f) for ln in lines]
-        lw = max(b[2] - b[0] for b in boxes)
+        while True:  # shrink until the widest line fits 86 % of the frame width
+            f = font(px, 800 if style != "small" else 600)
+            boxes = [tmp.textbbox((0, 0), ln, font=f) for ln in lines]
+            lw = max(b[2] - b[0] for b in boxes)
+            if lw <= 0.86 * self.W or px <= 12:
+                break
+            px -= 2
+        spacing = int(px * 0.12)
         lh = px + spacing
         pad = int(px * 0.5)
         Wc, Hc = lw + 2 * pad, lh * len(lines) + 2 * pad
@@ -171,7 +175,12 @@ def render(plan, render_dir, out_path, crf=17, preview_png_dir=None, log=print):
         if f in proj:
             u, v, depth = proj[f]
             glow.draw(add, u * W, (1 - v) * H, 1.0)
-        img = tonemap_add(cache, add) * vig
+        img = cache.copy()
+        nz = np.nonzero(add.max(2) > 1e-4)
+        if len(nz[0]):
+            y0, y1, x0, x1 = nz[0].min(), nz[0].max() + 1, nz[1].min(), nz[1].max() + 1
+            img[y0:y1, x0:x1] = tonemap_add(cache[y0:y1, x0:x1], add[y0:y1, x0:x1])
+        img *= vig
         img = overlays(plan, img, t, W, H, fix_font, read_font)
         caps.draw(img, t)
         frame = (np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)

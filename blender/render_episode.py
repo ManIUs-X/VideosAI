@@ -113,6 +113,8 @@ def setup_render(scene, q, device, out):
         sh.color_type = "MATERIAL"
         sh.show_shadows = True
         sh.show_cavity = True
+        sh.background_type = "VIEWPORT"
+        sh.background_color = (0.03, 0.05, 0.08)
         vs.view_transform = "Standard"
         vs.exposure = 0.0
 
@@ -241,7 +243,7 @@ def main():
     for name in ("left", "right", "chase"):
         ld = bpy.data.lights.new("stim_" + name, "POINT")
         ld.color = col
-        ld.shadow_soft_size = 0.03
+        ld.shadow_soft_size = 0.15
         ob = bpy.data.objects.new("stim_" + name, ld)
         ob.visible_camera = False
         scene.collection.objects.link(ob)
@@ -296,7 +298,7 @@ def main():
             ob = lamps[side]
             if p is not None:
                 ob.location = p
-            ob.data.energy = (1.6 if shot["name"] == "hook" else 9.0) * inten
+            ob.data.energy = (0.5 if shot["name"] == "hook" else 9.0) * inten
             ob.keyframe_insert("location", frame=f)
             ob.data.keyframe_insert("energy", frame=f)
         c = L.chase_state(plan, f)

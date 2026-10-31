@@ -26,6 +26,7 @@ def _mat(name, color, rough=0.75, sheen=0.0, emission=None, bump=0.0, sss=0.0):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
+    m.diffuse_color = (*(emission[:3] if emission else color), 1)  # Workbench/animatic colour
     p = nt.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (*color, 1)
     p.inputs["Roughness"].default_value = rough

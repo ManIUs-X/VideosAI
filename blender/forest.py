@@ -25,6 +25,7 @@ def mat(name, color, rough=0.8, emission=None, sss=0.0, noise_mix=None, bump=0.0
     nt = m.node_tree
     p = nt.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (*color, 1)
+    m.diffuse_color = (*(emission[:3] if emission else color), 1)  # Workbench/animatic colour
     p.inputs["Roughness"].default_value = rough
     if sss:
         p.inputs["Subsurface Weight"].default_value = sss
@@ -52,6 +53,7 @@ def mat(name, color, rough=0.8, emission=None, sss=0.0, noise_mix=None, bump=0.0
 def ground_material():
     m = bpy.data.materials.new("ground")
     m.use_nodes = True
+    m.diffuse_color = (0.03, 0.05, 0.02, 1)
     nt = m.node_tree
     p = nt.nodes["Principled BSDF"]
     p.inputs["Roughness"].default_value = 0.95
