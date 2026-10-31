@@ -161,8 +161,9 @@ def captions():
     cap(38.0, 41.0, "Otra vez", y=0.12, size=0.04)
     cap(41.1, 42.9, "REVELACIÓN", y=0.12, size=0.055)
     cap(43.0, 46.0, "Sin sonido. Misma trayectoria.", y=0.12, size=0.04)
-    cap(46.2, 50.0, "Ambas luces van SIEMPRE a 0,25 vueltas/s.\nEl «bip» en cada giro hace que una\nPAREZCA más rápida (≈5–14 % en laboratorio).",
-        y=0.11, size=0.031)
+    cap(46.2, 50.0, "Las dos van SIEMPRE\na 0,25 vueltas/s.\nEl «bip» en cada giro hace\nque una PAREZCA más rápida",
+        y=0.09, size=0.04)
+    cap(46.6, 50.0, "(≈5–14 % en laboratorio)", y=0.73, size=0.03, style="small")
     cap(50.3, DURATION, "¿Cuál te pareció más rápida\nen la Prueba 1?\nComenta: IZQ o DER", y=0.12, size=0.042)
     cap(50.3, DURATION, "Ilusión beep-speed · Merz et al. (2026)\nAtten Percept Psychophys · doi:10.3758/s13414-025-03211-6",
         y=0.75, size=0.019, style="small")

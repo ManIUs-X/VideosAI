@@ -40,5 +40,22 @@ Primera pasada, problemas encontrados y corregidos:
 
 Segunda pasada: todos los planos legibles, salvo el final, que se corrigió de nuevo (sector frontal del parche abierto).
 
-## 5. Prototipo de 8 s (`python run.py --mode test`)
-(se completa abajo con los resultados medidos)
+## 5. Prototipo de 8 s (`python run.py --mode test`): EJECUTADO
+- Render 3D: 240 frames a 540×960 con Cycles CPU en 1954 s (8,1 s/frame). Composición a 60 fps: unos 2 min.
+- Archivo: `ep01_beep_speed_test.mp4`. Medido con ffprobe: H.264 High, yuv420p, 1080×1920, 60 fps, AAC 48 kHz estéreo, 8,0 s. Más `ep01_beep_speed_test_control.mp4`.
+- Medido sobre el MP4 **decodificado**:
+  - beeps detectados 8/8; error de onset de −0,04 a +0,46 ms;
+  - control: 0 beeps detectados;
+  - ensayo del gancho: inversiones medidas en el video = inversiones planificadas (error de 0 frames, sin inversiones espurias); velocidad medida 0,2528 / 0,2525 rps (objetivo 0,25); error máximo de posición 2,7 px; beep − inversión visual = 0,00 a 0,02 ms;
+  - flashes: 0 transiciones grandes opuestas por segundo (cambio máximo de luminancia media entre frames: 0,023);
+  - sonoridad: −15,1 LUFS integrados, pico real −1,0 dBFS.
+
+### Fallos encontrados en el prototipo y corregidos (iteraciones reales)
+1. Recuadros visibles alrededor de cada luz: el parche del sprite cortaba la cola del halo ancho. Se amplió el radio del parche.
+2. Rótulos más anchos que el cuadro: ahora se ajustan automáticamente al 86 % del ancho.
+3. **Música con notas La4 (440 Hz)** durante la persecución: el detector encontró 2 "beeps" extra en la versión con ilusión y 4 en el control. Diluía la asociación beep↔giro. Regla nueva: el beep es el único evento de 440 Hz del episodio (`score.safe()`). Tras el cambio: 8/8 detecciones y 0 en el control.
+4. El verificador de video se enganchaba a la oreja del pudú, iluminada por la luz 3D del estímulo. Medía 0,04 rps y luego 0,149 rps en un lado. Cambios: (a) la luz 3D del gancho baja de 1,6 a 0,5 W y el estímulo sube (center_y de 0,215 a 0,25) para alejarlo de la cabeza; (b) el rastreo se hace en una ventana alrededor de la posición planificada y reporta el error de posición en px.
+5. Desfase de 1 frame en el verificador (`ffmpeg -ss` descarta el frame en T−0,5/fps): corregido.
+6. Sesgo del estimador de velocidad (mediana de |Δθ| sobre posiciones cuantizadas: +8–12 %): reemplazado por una regresión lineal por tramo.
+
+Nota: tras los cambios 3–6, el MP4 de prueba se recompuso y se volvió a verificar (`--skip-render`) sobre los frames 3D ya renderizados. Su iluminación 3D del gancho corresponde aún a la posición antigua del estímulo. El render completo usa la configuración nueva.

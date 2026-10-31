@@ -162,7 +162,10 @@ def render(plan, render_dir, out_path, crf=17, preview_png_dir=None, log=print):
             p = os.path.join(render_dir, "3d", f"{src:06d}.png")
             if not os.path.exists(p):
                 p = os.path.join(render_dir, "3d", f"{src + 1:06d}.png")
-            im = Image.open(p).convert("RGB")
+            if os.path.exists(p) and os.path.getsize(p) > 0:
+                im = Image.open(p).convert("RGB")
+            else:  # 2D animatic: placeholder plate naming the shot
+                im = placeholder(plan, W, H, t, fix_font)
             if im.size != (W, H):
                 im = im.resize((W, H), Image.LANCZOS)
             cache = np.asarray(im).astype(np.float32) / 255.0
@@ -195,6 +198,15 @@ def render(plan, render_dir, out_path, crf=17, preview_png_dir=None, log=print):
     if ff.returncode:
         raise RuntimeError("ffmpeg failed")
     return stim_log
+
+
+def placeholder(plan, W, H, t, f):
+    shot = next((x for x in plan["shots"] if x["start"] <= t < x["end"]), plan["shots"][-1])
+    g = np.linspace(0.16, 0.03, H)[:, None, None] * np.array([0.5, 0.75, 1.0])[None, None, :]
+    im = Image.fromarray((np.broadcast_to(g, (H, W, 3)) * 255).astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    d.text((W / 2, H * 0.8), f"[{shot['name']}]  t={t:5.2f}s", font=f, fill=(140, 160, 190), anchor="mm")
+    return im
 
 
 def overlays(plan, img, t, W, H, fix_font, read_font):

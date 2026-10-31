@@ -28,7 +28,7 @@ sys.path.insert(0, ROOT)
 from pudulab import audio as A  # noqa: E402
 from pudulab import compositor, verify  # noqa: E402
 
-MODES = {"test": ("test", 0.0, 8.0), "animatic": ("animatic", None, None), "final_cpu": ("final_cpu", None, None), "final": ("final", None, None),
+MODES = {"test": ("test", 0.0, 8.0), "animatic2d": (None, None, None), "animatic": ("animatic", None, None), "final_cpu": ("final_cpu", None, None), "final": ("final", None, None),
          "final_hd": ("final_hd", None, None)}
 
 
@@ -69,7 +69,7 @@ def main():
     plan_path = os.path.join(out, "plan.json")
     json.dump(plan, open(plan_path, "w"), default=float)
 
-    if not a.skip_render:
+    if not a.skip_render and quality is not None:
         blender = find_blender(a.blender)
         log(f"blender: {blender}  device={a.device}")
         cmd = [blender, "-b", "--python-exit-code", "1", "-P", os.path.join(ROOT, "blender", "render_episode.py"),
