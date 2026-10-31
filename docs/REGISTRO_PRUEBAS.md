@@ -70,3 +70,19 @@ Nota: tras los cambios 3–6, el MP4 de prueba se recompuso y se volvió a verif
 
 ## 7. Render final en CPU (`--mode final_cpu`)
 Lanzado a las 06:08 (hora del contenedor). 1635 frames 3D a 540×960, 10 spp + OIDN, compuestos a 1080×1920 y 60 fps.
+- **Render 3D completado:** 1635 frames en 15205 s (4 h 13 min; ≈ 9,3 s/frame). El primer compuesto se descartó porque tenía el rótulo antiguo de la revelación. Se recompuso con `--skip-render` en 16 min.
+- **Archivos:** `ep01_beep_speed_final_cpu.mp4` (23,1 MB) y `ep01_beep_speed_final_cpu_control.mp4`.
+- **Medido sobre el MP4 decodificado (`verification.json`, `all_ok: true`):**
+  - especificaciones: 1080×1920, 60 fps, H.264 High, AAC 48 kHz estéreo, 54,5 s;
+  - beeps: 24/24, error de onset máximo de 0,46 ms; control: 0 beeps;
+  - 6 ensayos (hook, T1a, T1b, T2a, T2b, revelación): 0 frames de error en todas las inversiones y 0 inversiones espurias;
+  - velocidad medida: 0,2477–0,2557 rps (objetivo 0,25);
+  - error de posición ≤ 3,97 px, sobre el fondo 3D real con ruido de render;
+  - beep − inversión visual: −0,02 a +0,02 ms;
+  - flashes: 0 (cambio máximo de luminancia media entre frames: 0,031);
+  - sonoridad: −17,5 LUFS, pico real −1,1 dBFS.
+- **Revisión visual de 8 fotogramas, defectos conocidos no corregidos:**
+  - En el escenario el pudú se ve casi siempre de espaldas, como una silueta oscura, y su expresión apenas se lee.
+  - El pelaje se ve gris en la escena con luz de luna.
+  - El 3D es de 540×960 escalado a 1080×1920, sin desenfoque de movimiento.
+  - Para mejorarlo: render con GPU (`final`/`final_hd`) y un plano frontal del pudú en las pruebas.
