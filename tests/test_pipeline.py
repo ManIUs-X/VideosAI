@@ -79,6 +79,38 @@ def test_animation_deterministic():
     assert a[1234] == b[1234]
 
 
+def test_sifi_schedule_and_detectors():
+    from pudulab.illusions import sound_flash as SF
+    from episodes.ep04_destellos_fantasma import episode as ep4
+
+    for tr in ep4.TRIALS:
+        assert tr.onset_frame % 2 == 0 and len(tr.flash_frames_list()) == tr.flash_frames == 2
+        assert abs(tr.onset_s - tr.onset_frame / 60) < 1e-12
+        bt = tr.beep_times_s()
+        assert len(bt) == tr.beeps and (not bt or bt[0] == tr.onset_s)
+    on = [t.onset_s for t in ep4.TRIALS]
+    assert min(np.diff(on)) >= 3.0 and ep4.DURATION <= 50
+    sr = A.SR
+    x = np.random.default_rng(1).standard_normal(sr * 2) * 0.02
+    b = SF.beep(amp=0.2)
+    for t in (0.5, 0.566):
+        x[int(round(t * sr)):int(round(t * sr)) + len(b)] += b
+    t, _ = SF.detect_beeps(x)
+    assert len(t) == 2 and abs(t[1] - t[0] - 0.066) < 1e-3
+    lum = np.full(200, 0.1)
+    lum[100:102] = 0.9
+    assert SF.detect_flashes(lum) == [(100, 2)]
+    # nothing but the flash disk changes around a flash (exact, pre-codec)
+    R = ep4.Renderer()
+    f = ep4.TRIALS[0].onset_frame
+    a, c = R.frame(f - 1).astype(int), R.frame(f).astype(int)
+    d = np.abs(a - c).max(2)
+    y0, y1, x0, x1 = R.flash_box
+    assert d[y0:y1, x0:x1].max() > 100
+    d[y0:y1, x0:x1] = 0
+    assert d.max() == 0
+
+
 if __name__ == "__main__":
     for k, v in list(globals().items()):
         if k.startswith("test_"):

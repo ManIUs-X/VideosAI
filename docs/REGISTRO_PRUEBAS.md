@@ -86,3 +86,36 @@ Lanzado a las 06:08 (hora del contenedor). 1635 frames 3D a 540×960, 10 spp + O
   - El pelaje se ve gris en la escena con luz de luna.
   - El 3D es de 540×960 escalado a 1080×1920, sin desenfoque de movimiento.
   - Para mejorarlo: render con GPU (`final`/`final_hd`) y un plano frontal del pudú en las pruebas.
+
+## 8. Episodio 04 «Los destellos fantasma» (2.5D, sin Blender)
+Comando: `python -m episodes.ep04_destellos_fantasma.make`. Renderiza 2910 frames con 4 procesos, a unos 0,14 s/frame de reloj (unos 7 min), y después hace la verificación.
+
+### Iteraciones reales
+1. **Pudú 2.5D:** la luz de borde y la sombra salían en el lado opuesto, por el signo del desplazamiento de las máscaras. Se corrigió, igual que la pezuña levantada, que se veía como «dos dedos» flotando.
+2. **Prueba de 7 s (12–19 s):** el verificador encontró cambios de píxeles en el pudú justo antes del destello, cada 6 frames. Causa: la caché de poses usaba claves redondeadas pero dibujaba con valores sin redondear, así que el resultado dependía del historial de cada proceso. Ahora la pose se cuantiza antes de dibujar y el render es determinista; la comprobación exacta da 0 píxeles cambiados fuera del disco.
+3. **Ruido del códec:** en el MP4 decodificado, H.264 recuantiza unos pocos bordes de texto (≤ 48 píxeles a media resolución) en el frame del destello. Se distingue de un evento real con una comprobación exacta antes del códec y un umbral tolerante después.
+4. **Primer render completo: FALLÓ la verificación.** La luciérnaga del gancho, al irse volando, cruzaba la posición del destello a los 2,88 s y se detectó como un evento visual no planificado. Se cambiaron las trayectorias de esa luciérnaga y de la del final para que nunca pasen a menos de 150 px de esa posición, y se volvió a renderizar.
+
+### Resultado medido (render final, `verification.json`, `all_ok: true`)
+- **Especificaciones:** H.264 High, 1080×1920, 60 fps, yuv420p, AAC 48 kHz estéreo, 48,5 s.
+- **Eventos visuales detectados en el MP4:** exactamente 5, a 14,0 / 17,5 / 21,0 / 35,0 / 38,5 s, de 2 frames cada uno, y 0 eventos no planificados. Tras recodificar a 30 fps siguen siendo 5, de 1 frame cada uno.
+- **Bips:** 8/8 detectados (B2F1 ×4), con un error de onset máximo de 0,02 ms. No hay bips en el control B0F1.
+- **Sincronía medida:** inicio del destello → primer bip de 0,00 a 0,02 ms; intervalo entre bips de 65,98 a 66,00 ms.
+- **Exclusividad del evento:**
+  - antes del códec, 0 píxeles cambian fuera del disco entre onset−3 y onset+4;
+  - en el MP4, 11–48 píxeles cambian a media resolución por ruido del códec.
+- **Versiones:**
+  - el video es idéntico (md5) en las tres;
+  - `sin_bips` tiene 0 bips;
+  - `sin_sonido` tiene un pico de 0.
+- **Seguridad:**
+  - 0 transiciones grandes de luminancia;
+  - el destello ocupa el 0,14 % del área;
+  - los destellos están separados ≥ 3,5 s.
+- **Sonoridad:** −16,1 LUFS, pico real de −1,9 dBFS.
+- **Pruebas unitarias:** 7/7 pasan (nueva: `test_sifi_schedule_and_detectors`).
+
+### Lo que NO se pudo verificar
+- No se midió la percepción: no hubo participantes.
+- No se probó el comportamiento real de Instagram o TikTok al recodificar; se simuló con `ffmpeg -vf fps=30`.
+- No se midió la latencia de audio en móviles ni con Bluetooth.

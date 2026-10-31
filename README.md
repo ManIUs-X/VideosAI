@@ -4,6 +4,8 @@ Serie de cortometrajes verticales en 3D (1080×1920, 60 fps, H.264 + AAC 48 kHz 
 
 **Episodio 01 — «La luz que acelera»**: beep-speed illusion (Merz et al., 2026, doi:10.3758/s13414-025-03211-6). Ver [`docs/CIENCIA.md`](docs/CIENCIA.md).
 
+**Episodio 04 — «Los destellos fantasma»**: ilusión del destello inducido por sonido, B2F1 (Yang et al., 2026, doi:10.1186/s12993-026-00344-y). Es un episodio 2.5D, sin Blender, renderizado en unos 7 min con CPU: `python -m episodes.ep04_destellos_fantasma.make`. Ver [`docs/EP04_CIENCIA.md`](docs/EP04_CIENCIA.md).
+
 ## Cómo obtener el MP4 sin computador (sólo Android)
 
 Ver [`docs/EJECUCION_ANDROID.md`](docs/EJECUCION_ANDROID.md). Resumen: abre `notebooks/pudu_shorts_colab.ipynb` en Google Colab desde el navegador del teléfono, elige GPU T4, ejecuta las 5 celdas y descarga el MP4.
@@ -38,6 +40,9 @@ pudulab/                     # núcleo reutilizable (Python puro + NumPy/SciPy)
   audio.py                   # síntesis: beep del paradigma, instrumentos, foley, ambiente, reverb
   compositor.py              # composición 2D a 60 fps (estímulo, rótulos) → FFmpeg
   verify.py                  # verificación independiente del MP4 final
+  illusions/sound_flash.py   # SIFI (B2F1): calendario, bip de 3,5 kHz, detectores de bips y destellos
+  toon/pudu2d.py             # pudú 2.5D (Pillow) con expresiones, reutilizable
+  toon/forest2d.py           # bosque nocturno con capas parallax y luciérnagas
 blender/                     # se ejecuta dentro de Blender (bpy)
   pudu.py                    # personaje procedural + rig de pivotes (idéntico en toda la serie)
   anim.py                    # acciones: correr, mirar, sorpresa, salto, asentir, caída, etc.
